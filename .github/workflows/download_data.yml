@@ -1,0 +1,45 @@
+name: 'Mirror aviation data (and solve CORS issues!)'
+
+on:
+  schedule:
+    - cron:  '20 8 * * *'  # scheduled at 08:20 every day
+  workflow_dispatch:  # click the button on Github repo!
+
+jobs:
+  merge_branch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🍽️ Get working copy
+      uses: actions/checkout@master
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
+    - name: 💿 Install Requirements
+      run: pip install pandas fastparquet
+
+    - name: Download data
+      run: |
+        wget https://opensky-network.org/datasets/metadata/aircraftDatabase.zip -o aircraft/opensky_aircraftdb.zip
+        wget https://ddb.glidernet.org/download/ -o aircraft/ddb_glidernet.csv
+
+    - name: 🍳 Convert CSV files to parquet
+      uses: jannekem/run-python-script-action@v1
+      with:
+        script: |
+          import pandas as pd
+          df = pd.read_csv('aircraft/opensky_aircraftdb.zip')
+          df.to_parquet('aircraft/opensky_aircraftdb.parquet')
+          df = pd.read_csv('aircraft/ddb_glidernet.csv')
+          df.to_parquet('aircraft/ddb_glidernet.parquet')
+
+    - name: 🚀 Commit and push if it changed
+      run: |
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git add -A
+        timestamp=$(date -u)
+        git commit -m "Converted data on ${timestamp}" || exit 0
+        git push
