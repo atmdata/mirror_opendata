@@ -1,4 +1,4 @@
-name: 'Mirror aviation data (and solve CORS issues!)'
+name: 'Mirror aviation data'
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # click the button on Github repo!
 
 jobs:
-  merge_branch:
+  download:
     runs-on: ubuntu-latest
     steps:
     - name: 🍽️ Get working copy
@@ -22,8 +22,8 @@ jobs:
 
     - name: Download data
       run: |
-        wget https://opensky-network.org/datasets/metadata/aircraftDatabase.zip -o aircraft/opensky_aircraftdb.zip
-        wget https://ddb.glidernet.org/download/ -o aircraft/ddb_glidernet.csv
+        wget https://opensky-network.org/datasets/metadata/aircraftDatabase.zip -O aircraft/opensky_aircraftdb.zip
+        wget https://ddb.glidernet.org/download/ -O aircraft/ddb_glidernet.csv
 
     - name: 🍳 Convert CSV files to parquet
       uses: jannekem/run-python-script-action@v1
